@@ -29,7 +29,7 @@ const writeCounter = (count, callback) => {
   var counterString = zeroPaddedNumber(count);
   fs.writeFile(exports.counterFile, counterString, (err) => {
     if (err) {
-      throw ('error writing counter');
+      callback('error writing counter');
     } else {
       callback(null, counterString);
     }
@@ -46,7 +46,7 @@ exports.getNextUniqueId = (callback) => {
       memoryCounter = id + 1;
       writeCounter(memoryCounter, (err, fsCounter) => {
         if (err) {
-          callback(err)
+          callback(err);
         } else {
           callback(null, zeroPaddedNumber(fsCounter));
         }
