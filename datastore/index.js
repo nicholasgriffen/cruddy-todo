@@ -5,6 +5,12 @@ const counter = require('./counter');
 
 var items = {};
 
+// Helper function
+
+function todoFilePath(id) {
+  return path.join(exports.dataDir, id + '.txt')
+}
+
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
@@ -13,7 +19,7 @@ exports.create = (text, callback) => {
       throw err;
     } else {
       items[id] = text;
-      fs.writeFile(path.join(exports.dataDir, id + '.txt'), text, (err) => {
+      fs.writeFile(todoFilePath(id), text, (err) => {
         if (err) {
           callback(err)
         } else {
@@ -32,17 +38,24 @@ exports.readAll = (callback) => {
     } else if (!files) {
       callback(null, [])
     } else {
-      var data = _.map(files, (fileName) => {
+      Promise.all(_.map(files, (fileName) => {
         var id = fileName.split('.txt')[0]
-        return { id, text: id };
-      })
-      callback(null, data);
+        return new Promise((resolve, reject) => {
+          fs.readFile(todoFilePath(id), (err, todoBuff) => {
+            if (err) {
+              reject(err)
+            } else {
+              resolve({ id, text: String(todoBuff) })
+            }
+          })
+        })
+      })).then(todos => callback(null, todos))
     }
   })
 };
 
 exports.readOne = (id, callback) => {
-  fs.readFile(path.join(exports.dataDir, id + '.txt'), (err, buff) => {
+  fs.readFile(todoFilePath(id), (err, buff) => {
     if (err) {
       callback(new Error(`No item with id: ${id}`));
     } else {
@@ -56,7 +69,7 @@ exports.update = (id, text, callback) => {
     if (err) {
       callback(err);
     } else {
-      fs.writeFile(path.join(exports.dataDir, id + '.txt'), text, (err) => {
+      fs.writeFile(todoFilePath(id), text, (err) => {
         if (err) {
           callback(err)
         } else {
@@ -72,7 +85,7 @@ exports.delete = (id, callback) => {
     if (err) {
       callback(err);
     } else {
-      fs.unlink(path.join(exports.dataDir, id + '.txt'), (err) => {
+      fs.unlink(todoFilePath(id), (err) => {
         if (err) {
           callback(err);
         } else {
