@@ -55,7 +55,7 @@ exports.readAll = (callback) => {
 };
 
 exports.readOne = (id, callback) => {
-  return new Promise((resolve, reject) => {
+  new Promise((resolve, reject) => {
     fs.readFile(todoFilePath(id), (err, buff) => {
       if (err) {
         reject(new Error(`No item with id: ${id}`));
@@ -67,7 +67,7 @@ exports.readOne = (id, callback) => {
 };
 
 exports.update = (id, text, callback) => {
-  return new Promise((resolve, reject) => {
+  new Promise((resolve, reject) => {
     exports.readOne(id, (err, _todo) => {
       if (err) {
         reject(err);
@@ -85,19 +85,21 @@ exports.update = (id, text, callback) => {
 };
 
 exports.delete = (id, callback) => {
-  exports.readOne(id, (err, _todo) => {
-    if (err) {
-      callback(err);
-    } else {
-      fs.unlink(todoFilePath(id), (err) => {
-        if (err) {
-          callback(err);
-        } else {
-          callback();
-        }
-      })
-    }
-  })
+  new Promise((resolve, reject) => {
+    exports.readOne(id, (err, _todo) => {
+      if (err) {
+        reject(err);
+      } else {
+        fs.unlink(todoFilePath(id), (err) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve();
+          }
+        })
+      }
+    })
+  }).then(_ => callback()).catch(e => callback(e));
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
